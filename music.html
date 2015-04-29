@@ -1,0 +1,69 @@
+<button id="mute">Mute</button>
+<button id="play">Play</button>
+
+<script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+<script>
+
+  function GetAudioFromURL(URL, onLoadCallback, onProgressCallback, audioContext){
+    if (!audioContext){
+      window.AudioContext = window.AudioContext || window.webkitAudioContext
+      audioContext = new AudioContext();
+    }
+    var request = new XMLHttpRequest();
+    request.open('GET', URL, true);
+    request.responseType = 'arraybuffer';
+    request.onload = function () {
+      audioContext.decodeAudioData(request.response, function(buffer){
+        if (typeof onLoadCallback === 'function')
+          onLoadCallback(null, buffer);
+      },function (){
+        if (typeof onLoadCallback === 'function')
+          onLoadCallback(new Error("Decoding Error"), null);
+      });
+    };
+    request.onerror = function(){
+      if (typeof onLoadCallback === 'function')
+        onLoadCallback(new Error("Loading Error"), null);
+    }
+    request.onprogress = function(event){
+      if (typeof onProgressCallback === 'function'){
+        onProgressCallback(event);
+      }
+    }
+    request.send();
+  }
+
+  var socket = io();
+  var muteEl = document.getElementById('mute');
+  var playEl = document.getElementById('play');
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
+
+  var context = new AudioContext;
+  var gain = context.createGain();
+  var bufferSource = context.createBufferSource();
+  bufferSource.connect(gain);
+  gain.connect(context.destination);
+
+  // http://dig.ccmixter.org/dig/stype=all&sinced=&sort=rank&order=desc&lic=open&tags=&query=trance+
+  GetAudioFromURL('music/Psykick_-_Trance_Dance.mp3', function(error, buffer) {
+    bufferSource.buffer = buffer;
+    bufferSource.loop = true;
+    bufferSource.start(0);
+  }, null, context)
+
+  muteEl.addEventListener('click', function() {
+    gain.gain.value = 0
+  })
+
+  playEl.addEventListener('click', function() {
+    gain.gain.value = 1
+  })
+
+  socket.on('speedChange', function (data) {
+    console.log(data.speed);
+    if (data.speed > 1.5){
+      data.speed = 1.5;
+    }
+    bufferSource.playbackRate.value = data.speed + 0.4;
+  })
+</script>
