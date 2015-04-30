@@ -14,7 +14,7 @@ var SensorTagShake = require('../index.js');
 //   sockets.push(socket);
 // });
 
-var sensortagshake = new SensorTagShake();
+var sensortagshake = new SensorTagShake('+x');
 
 sensortagshake.on('shake', function(){
 	console.log("Shaken not stirred");

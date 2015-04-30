@@ -33,6 +33,13 @@
     request.send();
   }
 
+  var prev = 0;
+  var shakeX = [];
+  var shakeXDiff = [];
+  var prevTime = new Date().getTime();
+  var prevSpeed = 0;
+  var alpha = 0.7;
+
   var socket = io();
   var muteEl = document.getElementById('mute');
   var playEl = document.getElementById('play');
@@ -60,6 +67,15 @@
   })
 
   socket.on('speedChange', function (data) {
+    var currTime = new Date().getTime();
+    var tDiff = currTime - prevTime;
+    if (tDiff < 190){
+      tDiff = 190;
+    }
+    var speed = 250/tDiff;
+    var smoothenedSpeed = ((1-alpha)*speed)+(alpha*prevSpeed);
+    prevSpeed = smoothenedSpeed;
+    prevTime = currTime;
     console.log(data.speed);
     if (data.speed > 1.5){
       data.speed = 1.5;

@@ -3,63 +3,88 @@ var async = require('async');
 var util = require('util');
 var SensorTag = require('SensorTag');
 
+var prevSensorValue = 0;
 
-function SensorTagShake (){
+function SensorTagShake (direction){
 
-  var prev = 0;
-  var shakeX = [];
-  var shakeXDiff = [];
-  var prevTime = new Date().getTime();
-  var prevSpeed = 0;
-  var alpha = 0.7;
+  if (typeof direction !== 'string'){
+    console.error('First argument of SensorTagShake should be a direction string.');
+    return;
+  }
+
+  if (direction.length !== 1 && direction.length !==2 ){
+    console.error('Direction string must be 1 or 2 character long');
+    return;
+  }
+
+  var cordinate = direction[direction.length-1];
+
+  if (cordinate !== 'x' && cordinate !== 'y' && cordinate !== 'z' ){
+    console.error('Direction string include a direction, x,y,z');
+    return;
+  }
+
+  var sign = '+';
+
+  if (direction.length == 2){
+    sign = direction[0];
+    if (sign !== '+' && sign !== '-' ){
+      console.error('Direction can include a sign, +/-');
+      return;
+    }
+  }
+
   var self = this;
 
   EventEmitter.call(this);
 
   SensorTag.discover(function(sensorTag) {
-    console.log('discovered: ' + sensorTag);
-
     sensorTag.on('disconnect', function() {
-      console.log('disconnected!');
+      console.log('Disconnected from SensorTag!');
       process.exit(0);
     });
 
     async.series([
         function(callback) {
-          console.log('connected!');
           sensorTag.connectAndSetUp(callback);
         },
 
         function(callback) {
-          // console.log('enableAccelerometer');
+          console.log('Connected to SensorTag!');
           sensorTag.enableAccelerometer(callback);
         },
-
         function(callback) {
-           sensorTag.on('accelerometerChange', function(x, y, z) {
-            var diff = x - prev;
-            prev = x;
-            if (diff > 0.7){
-              var currTime = new Date().getTime();
-              var tDiff = currTime - prevTime;
-              if (tDiff < 190){
-                tDiff = 190;
-              }
-              var speed = 250/tDiff;
-              var smoothenedSpeed = ((1-alpha)*speed)+(alpha*prevSpeed);
-              prevSpeed = smoothenedSpeed;
-              prevTime = currTime;
-              // console.log(smoothenedSpeed, speed,diff, tDiff);
-              self.emit('shake', smoothenedSpeed);
+          sensorTag.on('accelerometerChange', function(x, y, z) {
+
+            // console.log(x.toFixed(2));
+
+            var value = 0;
+            if (cordinate === 'x'){
+              value = x;
+            }else if(cordinate === 'y'){
+              value = y;
+            }else if (cordinate === 'z'){
+              value = z;
             }
+
+            if ( (prevSensorValue < 0 && value > 0 && sign === '-')  ||
+                 (prevSensorValue > 0 && value < 0 && sign === '+') ){
+              // console.log(prevSensorValue, value, Math.abs(value-prevSensorValue));
+              self.emit('shake', {
+                value: value,
+                time : new Date().getTime()
+              });
+            }
+            prevSensorValue = value;
+
           });
           sensorTag.setAccelerometerPeriod(200, function(error) {
-            console.log('notifyAccelerometer');
+            console.log("Starting Accelerometer");
             sensorTag.notifyAccelerometer();
           });
+          callback();
         }
-      ]
-    );
+    ]);
   });
 }
 
