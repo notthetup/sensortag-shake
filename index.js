@@ -46,7 +46,9 @@ function SensorTagShake (direction, options){
     startListeningForShakes(this.sensorTag);
   }else{
     SensorTag.discover(function(sensorTag) {
-      startListeningForShakes(sensorTag);
+      sensorTag.connectAndSetUp(function(){
+        startListeningForShakes(sensorTag);
+      });
     });
   }
 
@@ -54,16 +56,10 @@ function SensorTagShake (direction, options){
 
   function startListeningForShakes(sensorTag){
     sensorTag.on('disconnect', function() {
-      console.log('Disconnected from SensorTag!');
-      process.exit(0);
+      console.error('Disconnected from SensorTag!');
     });
 
     async.series([
-      function(callback) {
-        console.log('Connected to Sensortag!');
-        sensorTag.connectAndSetUp(callback);
-      },
-
       function(callback) {
         sensorTag.enableAccelerometer(callback);
       },
