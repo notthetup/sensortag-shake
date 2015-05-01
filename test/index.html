@@ -33,9 +33,6 @@
     request.send();
   }
 
-  var prev = 0;
-  var shakeX = [];
-  var shakeXDiff = [];
   var prevTime = new Date().getTime();
   var prevSpeed = 0;
   var alpha = 0.7;
@@ -52,10 +49,10 @@
   gain.connect(context.destination);
 
   // http://dig.ccmixter.org/dig/stype=all&sinced=&sort=rank&order=desc&lic=open&tags=&query=trance+
-  GetAudioFromURL('music/Psykick_-_Trance_Dance.mp3', function(error, buffer) {
+  GetAudioFromURL('music/F_Fact_-_The_Beach.mp3', function(error, buffer) {
     bufferSource.buffer = buffer;
     bufferSource.loop = true;
-    bufferSource.start(0);
+    bufferSource.start(0, 50);
   }, null, context)
 
   muteEl.addEventListener('click', function() {
@@ -66,20 +63,17 @@
     gain.gain.value = 1
   })
 
-  socket.on('speedChange', function (data) {
-    var currTime = new Date().getTime();
+  socket.on('shake', function (data) {
+    var currTime = data.time;
     var tDiff = currTime - prevTime;
     if (tDiff < 190){
       tDiff = 190;
     }
-    var speed = 250/tDiff;
+    var speed = 300/tDiff;
     var smoothenedSpeed = ((1-alpha)*speed)+(alpha*prevSpeed);
     prevSpeed = smoothenedSpeed;
+    console.log(tDiff, speed, smoothenedSpeed);
+    bufferSource.playbackRate.value = smoothenedSpeed + 0.4;
     prevTime = currTime;
-    console.log(data.speed);
-    if (data.speed > 1.5){
-      data.speed = 1.5;
-    }
-    bufferSource.playbackRate.value = data.speed + 0.4;
   })
 </script>
