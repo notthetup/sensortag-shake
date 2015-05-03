@@ -1,7 +1,7 @@
 var EventEmitter = require("events").EventEmitter;
 var async = require('async');
 var util = require('util');
-var SensorTag = require('SensorTag');
+var SensorTag = require('sensortag');
 
 var prevSensorValue = [0,0];
 
