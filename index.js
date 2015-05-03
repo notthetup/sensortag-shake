@@ -95,7 +95,7 @@ function SensorTagShake (direction, options){
 
         });
         sensorTag.setAccelerometerPeriod(100, function(error) {
-          console.log("Starting Accelerometer");
+          // console.log("Starting Accelerometer");
           sensorTag.notifyAccelerometer();
         });
         callback();
