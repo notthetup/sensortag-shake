@@ -42,8 +42,8 @@ function SensorTagShake (direction, options){
 
   EventEmitter.call(this);
 
-  if (this.sensorTag){
-    startListeningForShakes(this.sensorTag);
+  if (this.options.sensorTag){
+    startListeningForShakes(this.options.sensorTag);
   }else{
     SensorTag.discover(function(sensorTag) {
       sensorTag.connectAndSetUp(function(){
